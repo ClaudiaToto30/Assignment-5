@@ -1,0 +1,106 @@
+---
+title: "Assignment 5"
+author: "Claudia Toto"
+date: "2026-10-08"
+output: html_document
+---
+
+```{r}
+library(readxl)
+library(fpp2)
+```
+
+
+```{r}
+data_check <- read_excel(
+  "MRTSSM44000USN.xlsx",
+  sheet = "Monthly"
+)
+
+head(data_check)
+```
+
+
+```{r}
+head(data_check)
+```
+
+```{r}
+names(data_check)
+```
+```{r}
+sales_ts <- ts(
+  data_check$MRTSSM44000USN,
+  start = c(1992, 1),
+  frequency = 12
+)
+
+sales_ts
+attributes(sales_ts)
+```
+
+```{r}
+## Time Series Plot 
+plot(sales_ts,
+     main = "Monthly U.S. Retail Trade Sales",
+     xlab = "Year",
+     ylab = "Millions of Dollars",
+     yaxt = "n")
+
+axis(2,
+     at = seq(100000, 700000, by = 100000),
+     labels = format(seq(100000, 700000, by = 100000),
+                     big.mark = ",",
+                     scientific = FALSE))
+```
+
+#### The time series shows monthly U.S. retail sales over time. The series has a clear overall upward trend, indicating that retail sales generally increase over the years. The plot also shows recurring monthly fluctuations, suggesting the presence of seasonality. There is a noticeable decline around 2008–2009, followed by a recovery and continued growth. The variability also becomes larger as the level of sales increases.
+
+```{r}
+stl_decomp <- stl(sales_ts, s.window = "periodic")
+plot(stl_decomp)
+```
+
+#### The STL decomposition separates monthly U.S. retail sales into three components: trend, seasonality, and remainder. The **trend** shows an overall increase in sales, with a temporary decline around 2008–2009 and a sharp rise around 2020. **Seasonality** reveals recurring annual patterns, indicating that sales are influenced by seasonal factors. The **remainder** captures unexplained fluctuations, with larger deviations around 2020 and in later years. Overall, the decomposition highlights long-term sales growth, recurring seasonal patterns, and irregular variations that are useful for understanding historical sales and supporting future forecasts.
+
+```{r}
+attributes(stl_decomp)
+```
+```{r}
+# Lets print out a seasonal adjustment
+seasadj(stl_decomp)
+```
+```{r}
+# Plot a line on the graph
+plot(sales_ts)
+lines(seasadj(stl_decomp), col="Red")
+```
+
+#### The graph compares the original monthly U.S. retail sales data (black line) with the seasonally adjusted series (red line). The red line removes recurring seasonal fluctuations, making the underlying trend easier to identify. Both series show an overall upward trend, with a temporary decline around 2008–2009 and a sharp increase around 2020. Overall, seasonal adjustment helps reveal the long-term movement in retail sales and supports more accurate analysis and forecasting.
+
+```{r}
+# Default period forecast
+f_stl <- forecast(stl_decomp)
+# you can pass the # of period
+f_stl <- forecast(stl_decomp,h=15)
+f_stl
+```
+
+```{r}
+plot(f_stl)
+```
+
+#### The STL + ETS model forecasts future monthly U.S. retail sales based on historical patterns. The forecast (blue line) indicates that sales are expected to remain relatively high and continue on an overall upward trajectory. The shaded areas represent prediction intervals, showing the uncertainty associated with future values. As the forecast horizon increases, uncertainty generally grows. Overall, the model suggests continued growth in retail sales, although actual results may differ from the predicted values.
+
+```{r}
+# There is more than one way to do things
+decomp_elec <- decompose(sales_ts)
+decomp_elec 
+plot(decomp_elec)
+
+# Each one shows different attributes 
+attributes(decomp_elec)
+```
+```{r}
+seasadj(decomp_elec)
+```
